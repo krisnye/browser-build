@@ -66,6 +66,6 @@ You can also call the "watch" function with the same config as above and it will
 
     require("browser-build").watch(config);
 
-Note: I do not perform any special shimming of nodejs specific built in properties like "process" etc.
+Note: I do not perform any special shimming of nodejs specific built in properties like "process" etc.  If your module contains code which will not run in the browser, then you will have to provide your own shims or environment tests.
 
 TODO: Add support for building dependent modules not found in original source directory.
