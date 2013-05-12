@@ -37,10 +37,10 @@ Will create the following structure:
                 require.js  # defines window.require function
                 includes.js # client-side includes all modules
                 mymodule/
-                    index.js
-                    alpha.js
+                    index.js # wrapped in browser define function
+                    alpha.js # wrapped in browser define function
                     foo/
-                        beta.js
+                        beta.js # wrapped in browser define function
         lib/
             index.js
             alpha.js
