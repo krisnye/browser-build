@@ -5,12 +5,11 @@ Makes commonjs modules available in the browser via window.require("module-name"
 
 Assuming you have the following directory structure:
 
-    /
-        lib/
-            index.js
-            alpha.js
-            foo/
-                beta.js
+    lib/
+        index.js
+        alpha.js
+        foo/
+            beta.js
 
 Running the following script:
 
@@ -31,21 +30,20 @@ Running the following script:
 
 Will create the following structure:
 
-    /
-        www/
-            js/
-                require.js  # defines window.require function
-                includes.js # client-side includes all modules
-                mymodule/
-                    index.js # wrapped in browser define function
-                    alpha.js # wrapped in browser define function
-                    foo/
-                        beta.js # wrapped in browser define function
-        lib/
-            index.js
-            alpha.js
-            foo/
-                beta.js
+    www/
+        js/
+            require.js  # defines window.require function
+            includes.js # client-side includes all modules
+            mymodule/
+                index.js # wrapped in browser define function
+                alpha.js # wrapped in browser define function
+                foo/
+                    beta.js # wrapped in browser define function
+    lib/
+        index.js
+        alpha.js
+        foo/
+            beta.js
 
 And then you can use the modules in the browser:
 
