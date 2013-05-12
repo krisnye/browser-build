@@ -35,7 +35,7 @@ Will create the following structure:
         www/
             js/
                 require.js  # defines window.require function
-                includes.js # client-side includes includes modules
+                includes.js # client-side includes all modules
                 mymodule/
                     index.js
                     alpha.js
