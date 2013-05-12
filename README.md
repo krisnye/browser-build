@@ -21,9 +21,9 @@ Running the following script:
         output: {
             directory: "www/js",
             name: "mymodule",
-            debug: true,
+            debug: true,  // copy source code and maps if present?
             include: {
-                name: "all.js",
+                name: "includes.js",
                 base: "/js/"
             }
         }
@@ -34,11 +34,8 @@ Will create the following structure:
     /
         www/
             js/
-                require.js # defines window.require function
-                all.js # with content:
-                    document.writeln("<script src='/js/mymodule/index.js'></script>");
-                    document.writeln("<script src='/js/mymodule/alpha.js'></script>");
-                    document.writeln("<script src='/js/mymodule/foo/beta.js'></script>");
+                require.js  # defines window.require function
+                includes.js # client-side includes includes modules
                 mymodule/
                     index.js
                     alpha.js
@@ -49,3 +46,22 @@ Will create the following structure:
             alpha.js
             foo/
                 beta.js
+
+Then you can use the modules in the browser:
+
+    <html>
+        <head>
+            <script src="require.js"></script>
+            <script src="includes.js"></script>
+        </head>
+        <body>
+            <script>
+            var mm = require("mymodule");
+            mm.doSomethingAwesome();
+            </script>
+        </body>
+    </html>
+
+You can also call the "watch" function with the same config as above and it will dynamically watch for changes and incrementally build the output files as needed.  It will compile new files, and remove output files when you delete input files as well.
+
+    require("browser-build").watch(config);
