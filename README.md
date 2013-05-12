@@ -5,7 +5,7 @@ Makes commonjs modules available in the browser via window.require("module-name"
 
 Why did I write this when we already have browserify and commonjs-everywhere?
 
-**Speed of the edit/refresh/test inner loop**
+**Speed of the edit/refresh/test inner loop.**
 
 When developing for the browser, I need to be able to edit a source file and reload it in the browser as quickly as possible.  Browserify does not have an incremental build, so it's build time will grow in time as your project grows.  This is not acceptable to me.  Commonjs-everywhere does have a somewhat incremental build, but it still has to build the complete bundle internally for every change, so it also takes longer and longer to compile as your project grows.
 
