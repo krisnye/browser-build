@@ -47,7 +47,7 @@ Will create the following structure:
             foo/
                 beta.js
 
-Then you can use the modules in the browser:
+And then you can use the modules in the browser:
 
     <html>
         <head>
@@ -65,3 +65,7 @@ Then you can use the modules in the browser:
 You can also call the "watch" function with the same config as above and it will dynamically watch for changes and incrementally build the output files as needed.  It will compile new files, and remove output files when you delete input files as well.
 
     require("browser-build").watch(config);
+
+Note: I do not perform any special shimming of nodejs specific built in properties like "process" etc.
+
+TODO: Add support for building dependent modules not found in original source directory.
