@@ -15,7 +15,9 @@ Debugging is also supported both by making source maps and source code available
 
 Your module files are only lightly shimmed into a require.register function that doesn't change your line numbers.
 
+Installation:
 
+    npm install browser-build
 
 Assuming you have the following directory structure:
 
