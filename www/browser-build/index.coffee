@@ -11,8 +11,6 @@ getModuleId = (config, file) ->
     path = np.relative config.input.directory, file
     # replace \ with /
     path = path.replace /\\/g, "\/"
-    # remove trailing index.js
-    path = path.replace /\bindex\.js$/, ""
     # add the output base name
     path = config.output.name + "/" + path
     # remove trailing /
@@ -137,7 +135,14 @@ copyRequire = (config) ->
         utility.copy source, target
         log config, "Copied #{target}"
 
+check = (config) ->
+    throw new Error "config.input is required" unless config?.input?
+    for key, value of config.input when value is true
+        config.input[key] = key.split(/\/\\/g).pop()
+    console.log config
+
 exports.build = (config, callback) ->
+    check config
     list = utility.list config.input.directory, {include: ".js"}
     for file in list
         buildFile config, file
@@ -145,6 +150,7 @@ exports.build = (config, callback) ->
     copyRequire config
     callback?()
 exports.watch = (config) ->
+    check config
     buildIncludes config
     copyRequire config
     watcher.watchDirectory config.input.directory, {include: ".js",initial:false},

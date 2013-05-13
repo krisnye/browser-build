@@ -6,10 +6,9 @@ glassConfig =
 
 browserConfig =
     input:
-        directory: glassConfig.node.output
+        "lib": "glass"
     output:
         directory: 'www'
-        name: name
         debug: true
         test: 'mocha'
         include:

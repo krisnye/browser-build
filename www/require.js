@@ -1,10 +1,7 @@
 (function() {
-    if (this.require != null)
-        return;
-
-    this.require = function require(path) {
+    var require = function require(path) {
         // Find in cache
-        var m = modules[path];
+        var m = modules[path] || modules[path + "/index"];
         if (!m) {
             throw new Error("Couldn't find module for: " + path);
         }
@@ -21,7 +18,7 @@
     // Cache of module objects
     var modules = {};
 
-    var normalize = function(curr, path) {
+    var normalize = require.normalize = function(curr, path) {
         var segs = curr.split('/'), seg;
 
         // Non relative path
@@ -51,5 +48,17 @@
     require.register = function(path, fn) {
         return modules[path] = fn;
     };
+
+    require.loadAll = function() {
+        var id;
+        for (id in modules)
+            require(id);
+    }
+
+    // export
+    if (typeof module == "undefined")
+        this.require = require;
+    else
+        module.exports = require;
 
 })();

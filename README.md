@@ -33,11 +33,10 @@ Running the following script:
 
     require("browser-build").build({
         input: {
-            directory: "lib"
+            "lib": "mymodule"
         },
         output: {
             directory: "www/js",
-            name: "mymodule",
             debug: true,    // copy source code and maps if present?
             test: "mocha",  // generates a browser mocha test.html
             include: {
@@ -60,11 +59,6 @@ Will create the following structure:
                 alpha.js            # wrapped in require.register function
                 foo/
                     beta.js         # wrapped in require.register function
-    lib/
-        index.js
-        alpha.js
-        foo/
-            beta.js
 
 And then you can use the modules in the browser:
 
