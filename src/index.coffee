@@ -118,8 +118,11 @@ exports.watch = (config) ->
     copyRequire config
     watcher.watchDirectory config.input.directory, {include: ".js",initial:false},
         (file, curr, prev, change) ->
+            start = new Date().getTime()
             buildFile config, file
             if change is "deleted" or change is "created"
                 buildIncludes config
+            stop = new Date().getTime()
+            console.log stop - start
                 # we should really also delete generated files
                 # if you delete

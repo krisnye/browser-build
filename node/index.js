@@ -162,10 +162,15 @@
       include: ".js",
       initial: false
     }, function(file, curr, prev, change) {
+      var start, stop;
+
+      start = new Date().getTime();
       buildFile(config, file);
       if (change === "deleted" || change === "created") {
-        return buildIncludes(config);
+        buildIncludes(config);
       }
+      stop = new Date().getTime();
+      return console.log(stop - start);
     });
   };
 
