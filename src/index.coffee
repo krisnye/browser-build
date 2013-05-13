@@ -3,14 +3,6 @@ watcher = require "glass-platform/node/build/watcher"
 np = require "path"
 fs = require 'fs'
 
-config =
-    input:
-        directory: "node"
-        exclude: "node_modules"
-    output:
-        directory: "browser"
-        name: "glass"
-
 log = (config, message) ->
     console.log message unless config.silent
 
@@ -41,6 +33,32 @@ getOutputFile = (config, file) ->
 deleteFile = (file) ->
     if fs.existsSync file
         fs.unlinkSync file
+
+buildBrowserTestFile = (config) ->
+    if config.output.test is 'mocha'
+        testFile = "#{config.output.directory}/test.html"
+        if not fs.existsSync testFile
+            fs.writeFileSync testFile,
+                """
+                <html>
+                    <head>
+                        <title>#{config.output.name.capitalize()} Test</title>
+                        <link rel="stylesheet" type="text/css" href="https://raw.github.com/visionmedia/mocha/master/mocha.css">
+                        <script src="https://raw.github.com/visionmedia/mocha/master/mocha.js"></script>
+                        <script>mocha.setup('bdd');</script>
+                        <script src="require.js"></script>
+                        <script src="#{config.output.include.name}"></script>
+                    </head>
+                    <body>
+                        <div id="mocha"></div>
+                        <script>
+                        mocha.setup('bdd');
+                        mocha.run();
+                        </script>
+                    </body>
+                </html>
+                """, "utf8"
+            console.log "Created #{np.normalize testFile}"
 
 copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
     mapInput = inputFile.replace /\.js$/, ".map"
@@ -101,9 +119,12 @@ buildIncludes = (config) ->
     includeFile = np.join config.output.directory, config.output.include.name
     utility.write includeFile, script
     log config, "Created #{includeFile}"
+    # also build the test file
+    buildBrowserTestFile config
 
 copyRequire = (config) ->
-    source = np.join __dirname, '../browser/require.js'
+    # copy the require from our source to the output directory
+    source = np.join __dirname, '../www/require.js'
     target = np.join config.output.directory, 'require.js'
     if not fs.existsSync target
         utility.copy source, target

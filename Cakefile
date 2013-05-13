@@ -11,6 +11,7 @@ browserConfig =
         directory: 'www'
         name: name
         debug: true
+        test: 'mocha'
         include:
             name: 'includes.js'
             base: './'

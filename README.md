@@ -38,7 +38,8 @@ Running the following script:
         output: {
             directory: "www/js",
             name: "mymodule",
-            debug: true,  // copy source code and maps if present?
+            debug: true,    // copy source code and maps if present?
+            test: "mocha",  // generates a browser mocha test.html
             include: {
                 name: "includes.js",
                 base: "/js/"
@@ -53,6 +54,7 @@ Will create the following structure:
         js/
             require.js              # defines window.require function
             includes.js             # client-side includes all modules
+            test.html               # mocha test page
             mymodule/
                 index.js            # wrapped in require.register function
                 alpha.js            # wrapped in require.register function
