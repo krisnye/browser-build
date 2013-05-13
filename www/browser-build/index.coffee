@@ -11,6 +11,9 @@ config =
         directory: "browser"
         name: "glass"
 
+log = (config, message) ->
+    console.log message unless config.silent
+
 getModuleId = (config, file) ->
     # get the relative path from root
     path = np.relative config.input.directory, file
@@ -79,7 +82,7 @@ buildFile = (config, file) ->
     input = utility.read file
     output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
     utility.write outputFile, output
-    console.log "Shimmed #{outputFile}"
+    log config, "Wrapped #{outputFile}"
     # copy the mapFile if it exists
     if config.output.debug
         copySourceMap config, file, outputFile
@@ -97,14 +100,14 @@ buildIncludes = (config) ->
         script += """document.writeln("<script src='#{base}#{file}'></script>");\n"""
     includeFile = np.join config.output.directory, config.output.include.name
     utility.write includeFile, script
-    console.log "Created #{includeFile}"
+    log config, "Created #{includeFile}"
 
 copyRequire = (config) ->
     source = np.join __dirname, '../browser/require.js'
     target = np.join config.output.directory, 'require.js'
     if not fs.existsSync target
         utility.copy source, target
-        console.log "Copied #{target}"
+        log config, "Copied #{target}"
 
 exports.build = (config, callback) ->
     list = utility.list config.input.directory, {include: ".js"}
@@ -118,11 +121,6 @@ exports.watch = (config) ->
     copyRequire config
     watcher.watchDirectory config.input.directory, {include: ".js",initial:false},
         (file, curr, prev, change) ->
-            start = new Date().getTime()
             buildFile config, file
             if change is "deleted" or change is "created"
                 buildIncludes config
-            stop = new Date().getTime()
-            console.log stop - start
-                # we should really also delete generated files
-                # if you delete

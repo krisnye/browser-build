@@ -44,6 +44,7 @@ Running the following script:
                 base: "/js/"
             }
         }
+        //  silent: true | false
     });
 
 Will create the following structure:

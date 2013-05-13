@@ -2,12 +2,13 @@ glassConfig =
     name: name = 'browser-build'
     input: 'src'
     node:
-        output: 'node'
+        output: 'lib'
+
 browserConfig =
     input:
         directory: glassConfig.node.output
     output:
-        directory: 'browser'
+        directory: 'www'
         name: name
         debug: true
         include:
