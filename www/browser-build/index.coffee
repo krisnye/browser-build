@@ -64,7 +64,14 @@ copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
     mapInput = inputFile.replace /\.js$/, ".map"
     mapOutput = outputFile.replace /\.js$/, ".map"
     if fs.existsSync mapInput
-        map = JSON.parse utility.read mapInput
+        try
+            map = JSON.parse utility.read mapInput
+        catch e
+            # this can happen sometimes if we're reading
+            # while this file is getting written by coffee -c
+            map =
+                sourceRoot: "."
+                sources: []
         # modify the sourceRoot and sources
         # to expect the source to be in the same directory
         # find and copy each source to the output directory
