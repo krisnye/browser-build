@@ -23,7 +23,6 @@
   "license": "BSD",
   "gitHead": "a04aeedc5b579f7694723ff5567f53c6fdaaed6c",
   "dependencies": {
-    "sugar": "1.3.x",
     "glass-platform": "~0.0.7"
   },
   "devDependencies": {
