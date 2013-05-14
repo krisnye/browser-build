@@ -1,6 +1,6 @@
 {
   "name": "browser-build",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "Makes commonjs modules available in the browser via window.require('module-name')",
   "main": "lib/index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "license": "BSD",
   "gitHead": "a04aeedc5b579f7694723ff5567f53c6fdaaed6c",
   "dependencies": {
-    "glass-platform": "~0.0.7"
+    "glass-platform": "0.1.2"
   },
   "devDependencies": {
     "sugar": "1.3.8"

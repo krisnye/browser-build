@@ -33,7 +33,8 @@ Running the following script:
 
     require("browser-build").build({
         input: {
-            "lib": "mymodule"
+            "mymodule": "lib"   // builds this folder starting with lib/index.js
+            "sugar": true       // builds this dependency found with require.resolve("sugar")
         },
         output: {
             directory: "www/js",

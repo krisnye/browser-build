@@ -1,12 +1,14 @@
 glassConfig =
-    name: name = 'browser-build'
-    input: 'src'
-    node:
+    name: 'browser-build'
+    coffee:
+        input: 'src'
         output: 'lib'
 
 browserConfig =
     input:
-        "lib": "glass"
+        "browser-build": "lib"
+        "sugar": true           # built for testing
+        "glass-platform": true  # built for testing
     output:
         directory: 'www'
         debug: true
@@ -15,8 +17,9 @@ browserConfig =
             name: 'includes.js'
             base: './'
 
-glassBuilder = require "glass-platform/node/build"
-browserBuilder = require "./#{glassConfig.input}"
+# TODO: move glass-platform to glass-build
+glassBuilder = require "glass-platform/lib/build"
+browserBuilder = require "./#{glassConfig.coffee.input}"
 
 task 'build', ->
     glassBuilder.build glassConfig, ->

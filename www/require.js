@@ -1,7 +1,11 @@
 (function() {
     var require = function require(path) {
         // Find in cache
-        var m = modules[path] || modules[path + "/index"];
+        var m = modules[path];
+        if (!m) {
+            path += "/index"
+            m = modules[path];
+        }
         if (!m) {
             throw new Error("Couldn't find module for: " + path);
         }

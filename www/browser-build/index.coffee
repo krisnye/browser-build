@@ -1,32 +1,41 @@
-utility = require "glass-platform/node/build/utility"
-watcher = require "glass-platform/node/build/watcher"
+require 'sugar'
+utility = require "glass-platform/lib/build/utility"
+watcher = require "glass-platform/lib/build/watcher"
 np = require "path"
 fs = require 'fs'
 
 log = (config, message) ->
     console.log message unless config.silent
 
+getInputKeyValueForFile = (config, file) ->
+    for name, input of config.input when Object.isString input
+        if file.startsWith input
+            return [name,input]
+    throw new Error "input not found in config.input: #{file}"
+
+getInputDirectory = (config, file) ->
+    getInputKeyValueForFile(config, file)[1]
+
+getBaseModuleName = (config, file) ->
+    getInputKeyValueForFile(config, file)[0]
+
 getModuleId = (config, file) ->
+    name = getBaseModuleName config, file
+    inputDirectory = getInputDirectory config, file
     # get the relative path from root
-    path = np.relative config.input.directory, file
+    path = np.relative inputDirectory, file
     # replace \ with /
     path = path.replace /\\/g, "\/"
     # add the output base name
-    path = config.output.name + "/" + path
+    path = name + "/" + path
     # remove trailing /
     path = path.replace /\/$/, ""
     # remove trailing .js
     path = path.replace /\.js$/, ""
 
-getOutputFile = (config, file) ->
-    # get the relative path from root
-    path = np.relative config.input.directory, file
-    # replace \ with /
-    path = path.replace /\\/g, "\/"
-    # add the output base name
-    path = config.output.name + "/" + path
-    # join to output directory
-    path = np.join config.output.directory, path
+getOutputFile = (config, file, id) ->
+    id ?= getModuleId config, file
+    file = np.normalize np.join(config.output.directory, id) + ".js"
 
 deleteFile = (file) ->
     if fs.existsSync file
@@ -40,7 +49,7 @@ buildBrowserTestFile = (config) ->
                 """
                 <html>
                     <head>
-                        <title>#{config.output.name.capitalize()} Test</title>
+                        <title>Mocha Test</title>
                         <link rel="stylesheet" type="text/css" href="https://raw.github.com/visionmedia/mocha/master/mocha.css">
                         <script src="https://raw.github.com/visionmedia/mocha/master/mocha.js"></script>
                         <script>mocha.setup('bdd');</script>
@@ -94,14 +103,14 @@ copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
         else
             utility.write mapOutput, JSON.stringify map, null, '    '
 
-buildFile = (config, file) ->
-    outputFile = getOutputFile config, file
+buildFile = (config, file, id) ->
+    outputFile = getOutputFile config, file, id
     if not fs.existsSync file
         # delete source map files
         copySourceMap config, file, outputFile, true
         deleteFile outputFile
         return
-    id = getModuleId config, file
+    id ?= getModuleId config, file
     input = utility.read file
     output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
     utility.write outputFile, output
@@ -137,24 +146,63 @@ copyRequire = (config) ->
 
 check = (config) ->
     throw new Error "config.input is required" unless config?.input?
-    for key, value of config.input when value is true
-        config.input[key] = key.split(/\/\\/g).pop()
-    console.log config
+    for key, value of config.input
+        config[key] = np.normalize value
+    return
+
+getDependencies = (file, id, deps = {}) ->
+    getRelativeFileAndIds = (name) ->
+        dependent = np.normalize np.join(np.dirname(file), name) + ".js"
+        dependentId = np.join(id, name).replace(/\\/g, '\/')
+        recurseId = dependentId
+        if not fs.existsSync dependent
+            dependent = np.normalize np.join(np.dirname(file), name) + "/index.js"
+            dependentId = np.join(id, name).replace(/\\/g, '\/') + "/index"
+        [dependent, dependentId, recurseId]
+
+    content = utility.read file
+    names = utility.getMatches content, /\brequire\s*\(\s*(['"][^'"]+['"])\s*\)/g, 1
+    names = names.map (x) -> eval(x)
+    for name in names when name[0] is '.'
+        [dependentFile, fileId, recurseId] = getRelativeFileAndIds name
+        if not fs.existsSync dependentFile
+            console.warn "file not found #{dependentFile} referenced from #{file}"
+            continue
+        if not deps[dependentFile]
+            deps[dependentFile] = fileId
+            # recurse
+            getDependencies dependentFile, recurseId, deps
+    deps
+
+buildStatic = (config, moduleId) ->
+    main = require.resolve moduleId
+    throw new Error "Module not found: #{moduleId}" unless main?
+    deps = {}
+    deps[main] = moduleId + "/index"
+    deps = getDependencies main, moduleId, deps
+    for file, id of deps
+        buildFile config, file, id
+
+buildCommon = (config) ->
+    check config
+    copyRequire config
+    buildIncludes config
+    for name, input of config.input when input is true
+        buildStatic config, name
 
 exports.build = (config, callback) ->
-    check config
-    list = utility.list config.input.directory, {include: ".js"}
-    for file in list
-        buildFile config, file
-    buildIncludes config
-    copyRequire config
-    callback?()
-exports.watch = (config) ->
-    check config
-    buildIncludes config
-    copyRequire config
-    watcher.watchDirectory config.input.directory, {include: ".js",initial:false},
-        (file, curr, prev, change) ->
+    buildCommon config
+    for name, input of config.input when Object.isString input
+        list = utility.list input, {include: ".js"}
+        for file in list
             buildFile config, file
-            if change is "deleted" or change is "created"
-                buildIncludes config
+    callback?()
+
+exports.watch = (config) ->
+    buildCommon config
+    for name, input of config.input when Object.isString input
+        watcher.watchDirectory input, {include: ".js",initial:false},
+            (file, curr, prev, change) ->
+                buildFile config, file
+                if change is "deleted" or change is "created"
+                    buildIncludes config

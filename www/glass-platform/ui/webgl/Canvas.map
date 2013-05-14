@@ -1,0 +1,10 @@
+{
+    "version": 3,
+    "file": "Canvas.js",
+    "sourceRoot": ".",
+    "sources": [
+        "Canvas.coffee"
+    ],
+    "names": [],
+    "mappings": ";AAAA;CAAA,KAAA,sBAAA;;CAAA,CAAA,CAAc,IAAA,IAAd,MAAc;;CAAd,CAEA,CAAS,GAAT,CAAS,IAAsC;CAC3C,CAAA,EAAA,mBAAA;CAAA,CAEI,EADJ,MAAA;CACI,CAAS,IAAT,CAAA,4DAAA;MAFJ;CAHJ,GAEoC;CAFpC"
+}

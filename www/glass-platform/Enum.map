@@ -1,0 +1,10 @@
+{
+    "version": 3,
+    "file": "Enum.js",
+    "sourceRoot": ".",
+    "sources": [
+        "Enum.coffee"
+    ],
+    "names": [],
+    "mappings": ";AACA;CAAA,GAAA,EAAA;;CAAA,CAAA,CAAuB,GAAjB,CAAN;CACiB,CAAS,CAAT,CAAA,CAAA,SAAE;CAAe,EAAf,CAAA,EAAD;CAAgB,EAAR,CAAA,CAAQ,CAAT;CAArB,IAAa;;CAAb,EACU,KAAV,CAAU;CAAI,GAAA,SAAD;CADb,IACU;;CADV,EAES,IAAT,EAAS;CAAI,GAAA,SAAD;CAFZ,IAES;;CAFT;;CADJ;CAAA"
+}
