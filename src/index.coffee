@@ -60,6 +60,7 @@ buildBrowserTestFile = (config) ->
                     <body>
                         <div id="mocha"></div>
                         <script>
+                        require.loadAll();
                         mocha.setup('bdd');
                         mocha.run();
                         </script>
