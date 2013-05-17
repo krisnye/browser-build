@@ -4,9 +4,9 @@
 
   require('sugar');
 
-  utility = require("glass-platform/lib/build/utility");
+  utility = require("glass-build/utility");
 
-  watcher = require("glass-platform/lib/build/watcher");
+  watcher = require("glass-build/watcher");
 
   np = require("path");
 
@@ -237,9 +237,16 @@
   };
 
   buildStatic = function(config, moduleId) {
-    var deps, file, id, main, _results;
+    var deps, e, file, id, main, _results;
 
-    main = require.resolve(moduleId);
+    main = (function() {
+      try {
+        return require.resolve(moduleId);
+      } catch (_error) {
+        e = _error;
+        return null;
+      }
+    })();
     if (main == null) {
       throw new Error("Module not found: " + moduleId);
     }

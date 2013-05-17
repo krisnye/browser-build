@@ -1,6 +1,6 @@
 require 'sugar'
-utility = require "glass-platform/lib/build/utility"
-watcher = require "glass-platform/lib/build/watcher"
+utility = require "glass-build/utility"
+watcher = require "glass-build/watcher"
 np = require "path"
 fs = require 'fs'
 
@@ -175,7 +175,11 @@ getDependencies = (file, id, deps = {}) ->
     deps
 
 buildStatic = (config, moduleId) ->
-    main = require.resolve moduleId
+    main =
+        try
+            require.resolve moduleId
+        catch e
+            null
     throw new Error "Module not found: #{moduleId}" unless main?
     deps = {}
     deps[main] = moduleId + "/index"
