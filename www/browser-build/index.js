@@ -4,9 +4,9 @@
 
   require('sugar');
 
-  utility = require("glass-build/utility");
+  utility = require("./utility");
 
-  watcher = require("glass-build/watcher");
+  watcher = require("./watcher");
 
   np = require("path");
 

@@ -1,6 +1,6 @@
 require 'sugar'
-utility = require "glass-build/utility"
-watcher = require "glass-build/watcher"
+utility = require "./utility"
+watcher = require "./watcher"
 np = require "path"
 fs = require 'fs'
 
