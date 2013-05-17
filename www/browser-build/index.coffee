@@ -52,6 +52,7 @@ buildBrowserTestFile = (config) ->
                         <title>Mocha Test</title>
                         <link rel="stylesheet" type="text/css" href="https://raw.github.com/visionmedia/mocha/master/mocha.css">
                         <script src="https://raw.github.com/visionmedia/mocha/master/mocha.js"></script>
+                        <script src="https://raw.github.com/chaijs/chai/master/chai.js"></script>
                         <script>mocha.setup('bdd');</script>
                         <script src="require.js"></script>
                         <script src="#{config.output.include.name}"></script>
@@ -138,7 +139,10 @@ buildIncludes = (config) ->
 
 copyRequire = (config) ->
     # copy the require from our source to the output directory
-    source = np.join __dirname, '../www/require.js'
+    source = np.join __dirname, 'require.js'
+    # in case we're running from .coffee sources
+    if not fs.existsSync source
+        source = np.join __dirname, '../lib/require.js'
     target = np.join config.output.directory, 'require.js'
     if not fs.existsSync target
         utility.copy source, target

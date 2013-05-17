@@ -1,10 +1,22 @@
 (function() {
     var require = function require(path) {
+        var originalPath = path;
         // Find in cache
         var m = modules[path];
         if (!m) {
             path += "/index"
             m = modules[path];
+        }
+        // Find mapped to global object
+        if (!m) {
+            var steps = path.replace(/\/index$/, '').split(/\//);
+            var object = this;
+            for (var i = 0; object != null && i < steps.length; i++) {
+                object = object[steps[i]];
+            }
+            if (object != null) {
+                m = modules[originalPath] = {exports:object};
+            }
         }
         if (!m) {
             throw new Error("Couldn't find module for: " + path);
