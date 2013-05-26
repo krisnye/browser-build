@@ -33,7 +33,7 @@ Running the following script:
 
     require("browser-build").build({
         input: {
-            "mymodule": "lib"   // builds all modules in this folder
+            "mymodule": "lib",   // builds all modules in this folder
             "sugar": true       // builds this dependency found with require.resolve("sugar")
         },
         output: {
@@ -55,6 +55,8 @@ Will create the following structure:
                     alpha.js        # wrapped in require.register function
                     foo/
                         beta.js     # wrapped in require.register function
+                sugar/
+                    index.js
             test/
                 index.html               # mocha test page
                 mocha.css
