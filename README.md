@@ -39,7 +39,7 @@ Running the following script:
         output: {
             directory: "www/js",
             webroot: "www",
-            test: "mocha",  // generates a browser mocha test page.
+            test: "mocha"  // generates a browser mocha test page.
         }
         //  silent: true | false
     });
