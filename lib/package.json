@@ -1,6 +1,6 @@
 {
   "name": "browser-build",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Makes commonjs modules available in the browser via window.require('module-name')",
   "main": "index.js",
   "scripts": {

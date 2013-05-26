@@ -6,12 +6,9 @@ config =
         "browser-build": node
         "sugar": true           # built for testing
     output:
-        directory: 'www'
-        debug: true
+        directory: 'www/js'
+        webroot: 'www'
         test: 'mocha'
-        include:
-            name: 'includes.js'
-            base: './'
 
 browserBuilder = require "./#{source}"
 utility = require "./#{source}/utility"

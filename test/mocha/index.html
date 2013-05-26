@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <title>Test</title>
+        <link rel="stylesheet" type="text/css" href="mocha.css">
+    </head>
+    <body>
+        <div id="mocha"></div>
+        <script src="mocha.js"></script>
+        <script src="chai.js"></script>
+        <script src="../debug.js"></script>
+        <script>
+        mocha.setup('bdd');
+        require.loadAll();
+        mocha.run();
+        </script>
+    </body>
+</html>

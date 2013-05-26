@@ -33,41 +33,28 @@ getModuleId = (config, file) ->
     # remove trailing .js
     path = path.replace /\.js$/, ""
 
+getOutputModuleDirectory = (config) ->
+    np.join config.output.directory, "modules"
+
 getOutputFile = (config, file, id) ->
     id ?= getModuleId config, file
-    file = np.normalize np.join(config.output.directory, id) + ".js"
+    file = np.normalize np.join(getOutputModuleDirectory(config), id) + ".js"
 
 deleteFile = (file) ->
     if fs.existsSync file
         fs.unlinkSync file
 
 buildBrowserTestFile = (config) ->
-    if config.output.test is 'mocha'
-        testFile = "#{config.output.directory}/test.html"
-        if not fs.existsSync testFile
-            fs.writeFileSync testFile,
-                """
-                <html>
-                    <head>
-                        <title>Mocha Test</title>
-                        <link rel="stylesheet" type="text/css" href="https://raw.github.com/visionmedia/mocha/master/mocha.css">
-                        <script src="https://raw.github.com/visionmedia/mocha/master/mocha.js"></script>
-                        <script src="https://raw.github.com/chaijs/chai/master/chai.js"></script>
-                        <script>mocha.setup('bdd');</script>
-                        <script src="require.js"></script>
-                        <script src="#{config.output.include.name}"></script>
-                    </head>
-                    <body>
-                        <div id="mocha"></div>
-                        <script>
-                        require.loadAll();
-                        mocha.setup('bdd');
-                        mocha.run();
-                        </script>
-                    </body>
-                </html>
-                """, "utf8"
-            console.log "Created #{np.normalize testFile}"
+    type = config.output.test
+    return unless type?
+
+    testFolder = np.join(__dirname,  "../test", type)
+    if not fs.existsSync testFolder
+        throw new Error "Test files for #{type} not found, expected at #{testFolder}"
+    # copy this folder to the output test folder
+    outputFolder = np.join config.output.directory, "test"
+    # copy our test files to the output folder
+    utility.copy testFolder, outputFolder
 
 copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
     mapInput = inputFile.replace /\.js$/, ".map"
@@ -117,22 +104,33 @@ buildFile = (config, file, id) ->
     output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
     utility.write outputFile, output
     log config, "Wrapped #{outputFile}"
-    # copy the mapFile if it exists
-    if config.output.debug
-        copySourceMap config, file, outputFile
+    copySourceMap config, file, outputFile
 
 buildIncludes = (config) ->
-    return unless config.output.include?
-    list = utility.list config.output.directory, {include:".js",exclude:[config.output.include.name,"require.js"]}
+
+    list = utility.list getOutputModuleDirectory(config), {include:".js"}
     list = list.map (x) ->
         np.relative(config.output.directory, x).replace(/\\/g,'\/')
-    # sort shortest to longest
-    list = list.sort (a,b) -> a.length - b.length
+    # sort by shallowest directory, then alphabetical
+    list = list.sort (a, b) ->
+        aa = a.split '/'
+        bb = b.split '/'
+        if aa.length != bb.length
+            return aa.length - bb.length
+        for aitem, index in aa
+            bitem = bb[index]
+            compare = aitem.localeCompare bitem
+            if compare != 0
+                return compare
+        return 0
     script = ""
-    base = config.output.include.base ? ""
+    # figure out the include base relative to the web root.
+    webroot = config.output.webroot ? config.output.directory
+    base = np.relative(webroot, config.output.directory).replace(/\\/g, '\/')
+    base = "/#{base}/".replace(/\/+/, '/')
     for file in list
         script += """document.writeln("<script src='#{base}#{file}'></script>");\n"""
-    includeFile = np.join config.output.directory, config.output.include.name
+    includeFile = np.join config.output.directory, "debug.js"
     utility.write includeFile, script
     log config, "Created #{includeFile}"
     # also build the test file
@@ -144,7 +142,7 @@ copyRequire = (config) ->
     # in case we're running from .coffee sources
     if not fs.existsSync source
         source = np.join __dirname, '../lib/require.js'
-    target = np.join config.output.directory, 'require.js'
+    target = np.join getOutputModuleDirectory(config), 'require.js'
     if not fs.existsSync target
         utility.copy source, target
         log config, "Copied #{target}"
@@ -195,7 +193,6 @@ buildStatic = (config, moduleId) ->
 buildCommon = (config) ->
     check config
     copyRequire config
-    buildIncludes config
     for name, input of config.input when input is true
         buildStatic config, name
 
@@ -205,10 +202,12 @@ exports.build = (config, callback) ->
         list = utility.list input, {include: ".js"}
         for file in list
             buildFile config, file
+    buildIncludes config
     callback?()
 
 exports.watch = (config) ->
     buildCommon config
+    buildIncludes config
     for name, input of config.input when Object.isString input
         watcher.watchDirectory input, {include: ".js",initial:false},
             (file, curr, prev, change) ->

@@ -15,6 +15,7 @@ module.exports = exports =
         command = args.shift()
         child = cp.spawn command, args, options
         child.on 'exit', callback if callback?
+        return child
     exec: exec = (command, options, callback) ->
         return callback?() unless command?
         if typeof options is 'function'
@@ -45,13 +46,15 @@ module.exports = exports =
         return value.substring(value.length-match.length) is match if typeof match is 'string'
         return match.test value
     defaultFileExclude: ["node_modules","www"]
+    isFile: isFile = (file) -> fs.statSync(file)?.isFile?() is true
+    isDirectory: isDirectory = (file) -> fs.statSync(file)?.isDirectory?() is true
     list: list = (dir, options={}, files=[]) ->
         exclude = options.exclude ? exports.defaultFileExclude
         recursive = options.recursive ? true
         for file in fs.readdirSync(dir)
             file = np.join dir, file
             if not isMatch file, exclude, false
-                if fs.statSync(file)?.isFile?()
+                if isFile file
                     files.push file if isMatch file, options.include, true
                 else if recursive
                     list file, options, files
@@ -71,9 +74,15 @@ module.exports = exports =
     write: write = (file, content) ->
         makeParentDirectories file
         fs.writeFileSync(file, content, 'utf8')
+    # copies files or folders
     copy: copy = (source, target) ->
-        content = read source
-        write target, content
+        if isFile source
+            content = read source
+            write target, content
+        else if isDirectory source
+            files = fs.readdirSync source
+            for file in files
+                copy np.join(source, file), np.join(target, file)
     getMatches: (s, regex, group) ->
         if not regex.global
             throw 'regex must be declared with global modifier /trailing/g'
