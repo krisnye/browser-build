@@ -9,7 +9,7 @@ Why did I write this when we already have browserify and commonjs-everywhere?
 
 browser-build takes less than 3 milliseconds to rebuild any file you edit and that time will not increase as your project grows.
 
-When developing for the browser, I need to be able to edit a source file and reload it in the browser as quickly as possible.  Browserify does not have an incremental build, so it's build time will grow in time as your project grows. Commonjs-everywhere does have a somewhat incremental build, but it still generates the entire bundle internally for every change, so its compile time also grows with your project.
+When developing for the browser, I need to be able to edit a source file and reload it in the browser as quickly as possible.  Browserify does not have an incremental build, so it's build time will grow as your project grows. Commonjs-everywhere does have a somewhat incremental build, but it still generates the entire bundle internally for every change, so its compile time also grows with your project.
 
 Browser-build is insanely fast and because it only compiles files that you touch, it will never take any longer to incrementally build as your project grows.  If you edit your source, it will be ready before you can refresh your browser.
 
@@ -24,7 +24,7 @@ Installation:
 Assuming you have the following directory structure:
 
     lib/
-        index.js
+        index.js   # you must have an index.js in your source folder.
         alpha.js
         foo/
             beta.js
@@ -38,12 +38,8 @@ Running the following script:
         },
         output: {
             directory: "www/js",
-            debug: true,    // copy source code and maps if present?
-            test: "mocha",  // generates a browser mocha test.html
-            include: {
-                name: "includes.js",
-                base: "/js/"
-            }
+            webroot: "www",
+            test: "mocha",  // generates a browser mocha test page.
         }
         //  silent: true | false
     });
@@ -52,21 +48,25 @@ Will create the following structure:
 
     www/
         js/
-            require.js              # defines window.require function
-            includes.js             # client-side includes all modules
-            test.html               # mocha test page
-            mymodule/
-                index.js            # wrapped in require.register function
-                alpha.js            # wrapped in require.register function
-                foo/
-                    beta.js         # wrapped in require.register function
+            modules/
+                require.js          # defines window.require function
+                mymodule/
+                    index.js        # wrapped in require.register function
+                    alpha.js        # wrapped in require.register function
+                    foo/
+                        beta.js     # wrapped in require.register function
+            test/
+                index.html               # mocha test page
+                mocha.css
+                mocha.js
+                chai.js
+            debug.js                # includes all modules
 
 And then you can use the modules in the browser:
 
     <html>
         <head>
-            <script src="require.js"></script>
-            <script src="includes.js"></script>
+            <script src="/js/debug.js"></script>
         </head>
         <body>
             <script>
@@ -81,3 +81,5 @@ You can also call the "watch" function with the same config as above and it will
     require("browser-build").watch(config);
 
 Note: I do not perform any special shimming of nodejs specific built in properties like "process" etc.  If your module contains code which will not run in the browser, then you will have to provide your own shims or environment tests.
+
+In the future, I will also generate a /js/release.js file which will contain all modules merged and minified.

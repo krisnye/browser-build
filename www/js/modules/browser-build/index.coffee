@@ -214,3 +214,7 @@ exports.watch = (config) ->
                 buildFile config, file
                 if change is "deleted" or change is "created"
                     buildIncludes config
+
+# re-export utility and watcher
+exports.utility = utility
+exports.watcher = watcher

@@ -344,6 +344,10 @@
     return _results;
   };
 
+  exports.utility = utility;
+
+  exports.watcher = watcher;
+
 }).call(this);
 
 /*
