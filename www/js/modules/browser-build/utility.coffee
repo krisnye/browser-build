@@ -46,6 +46,9 @@ module.exports = exports =
         return value.substring(value.length-match.length) is match if typeof match is 'string'
         return match.test value
     defaultFileExclude: ["node_modules","www"]
+    touch: touch = (file) ->
+        now = new Date()
+        fs.utimesSync file, now, now
     isFile: isFile = (file) -> fs.statSync(file)?.isFile?() is true
     isDirectory: isDirectory = (file) -> fs.statSync(file)?.isDirectory?() is true
     list: list = (dir, options={}, files=[]) ->

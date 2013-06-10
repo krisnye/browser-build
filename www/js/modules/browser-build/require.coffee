@@ -1,4 +1,7 @@
 (->
+    # require already exists.
+    return if @require?
+
     # This provides the require function in the browser
     require = (path) ->
         originalPath = path

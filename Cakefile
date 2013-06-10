@@ -3,8 +3,7 @@ node = 'lib'
 
 config =
     input:
-        "browser-build": node
-        "sugar": true           # built for testing
+        "": true
     output:
         directory: 'www/js'
         webroot: 'www'

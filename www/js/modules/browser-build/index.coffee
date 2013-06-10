@@ -7,7 +7,11 @@ fs = require 'fs'
 log = (config, message) ->
     console.log message unless config.silent
 
+normalize = (file) -> file.replace /\\/g, "\/"
+
 getInputKeyValueForFile = (config, file) ->
+    # normalize file name to / format
+    file = normalize file
     for name, input of config.input when Object.isString input
         if file.startsWith input
             return [name,input]
@@ -19,25 +23,10 @@ getInputDirectory = (config, file) ->
 getBaseModuleName = (config, file) ->
     getInputKeyValueForFile(config, file)[0]
 
-getModuleId = (config, file) ->
-    name = getBaseModuleName config, file
-    inputDirectory = getInputDirectory config, file
-    # get the relative path from root
-    path = np.relative inputDirectory, file
-    # replace \ with /
-    path = path.replace /\\/g, "\/"
-    # add the output base name
-    path = name + "/" + path
-    # remove trailing /
-    path = path.replace /\/$/, ""
-    # remove trailing .js
-    path = path.replace /\.js$/, ""
-
 getOutputModuleDirectory = (config) ->
     np.join config.output.directory, "modules"
 
 getOutputFile = (config, file, id) ->
-    id ?= getModuleId config, file
     file = np.normalize np.join(getOutputModuleDirectory(config), id) + ".js"
 
 deleteFile = (file) ->
@@ -78,7 +67,7 @@ copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
                 deleteFile copyTo
             else
                 if not fs.existsSync source
-                    console.warn "Source not found: #{mapInput} -> #{source}"
+                    # console.warn "Source not found: #{mapInput} -> #{source}"
                     continue
                 utility.copy source, copyTo
             # also change the source reference to the shortName
@@ -92,14 +81,20 @@ copySourceMap = (config, inputFile, outputFile, deleteOutput = false) ->
         else
             utility.write mapOutput, JSON.stringify map, null, '    '
 
+buildMap = {}
 buildFile = (config, file, id) ->
+    # check build map to avoid duplicates
+    previousFile = buildMap[id]
+    if previousFile? and previousFile isnt file
+        return
+    buildMap[id] = file
+
     outputFile = getOutputFile config, file, id
     if not fs.existsSync file
         # delete source map files
         copySourceMap config, file, outputFile, true
         deleteFile outputFile
         return
-    id ?= getModuleId config, file
     input = utility.read file
     output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
     utility.write outputFile, output
@@ -110,7 +105,7 @@ buildIncludes = (config) ->
 
     list = utility.list getOutputModuleDirectory(config), {include:".js"}
     list = list.map (x) ->
-        np.relative(config.output.directory, x).replace(/\\/g,'\/')
+        normalize np.relative(config.output.directory, x)
     # sort by shallowest directory, then alphabetical
     list = list.sort (a, b) ->
         aa = a.split '/'
@@ -130,11 +125,19 @@ buildIncludes = (config) ->
     base = "/#{base}/".replace(/\/+/, '/')
     for file in list
         script += """document.writeln("<script src='#{base}#{file}'></script>");\n"""
-    includeFile = np.join config.output.directory, "debug.js"
+    includeFile = getDebugIncludeFile config
     utility.write includeFile, script
     log config, "Created #{includeFile}"
+    # also build the manifest
+    manifest = getDebugManifestFile config
+    manifestParent = np.dirname manifest
+    manifestList = list.map (x) -> normalize np.relative manifestParent, np.join(config.output.directory, x)
+    utility.write getDebugManifestFile(config), JSON.stringify(manifestList, null, "  ")
     # also build the test file
     buildBrowserTestFile config
+
+getDebugIncludeFile = (config) -> np.join config.output.directory, "debug.js"
+getDebugManifestFile = (config) -> np.join config.output.directory, "modules/manifest.json"
 
 copyRequire = (config) ->
     # copy the require from our source to the output directory
@@ -143,77 +146,103 @@ copyRequire = (config) ->
     if not fs.existsSync source
         source = np.join __dirname, '../lib/require.js'
     target = np.join getOutputModuleDirectory(config), 'require.js'
-    if not fs.existsSync target
-        utility.copy source, target
-        log config, "Copied #{target}"
+    utility.copy source, target
+    log config, "Copied #{target}"
 
 check = (config) ->
-    throw new Error "config.input is required" unless config?.input?
+    config.input ?= {"": true}
+    resolve = (root, module, source) ->
+        paths = [
+            root
+            np.join(root, "node_modules")
+            np.join(root, "../node_modules")
+            np.join(root, "../../node_modules")
+        ]
+        if process.env.NODE_PATH?
+            paths = paths.concat process.env.NODE_PATH.split np.delimiter
+        for path in paths
+            main = np.join path, module + "/package.json"
+            if fs.existsSync main
+                json = eval "(#{utility.read main})"
+                module = json.name
+                if json.dependencies?
+                    for name of json.dependencies
+                        fixOptions name, true, np.dirname(main), main
+                main = np.join np.dirname(main), (json.main ? "index.js")
+                return [module,main]
+            main = np.join path, module + ".js"
+            if fs.existsSync main
+                return [module,main]
+            main = np.join path, module + "/index.js"
+            if fs.existsSync main
+                return [module,main]
+        throw new Error "module not found: " + module + ", source: " + source
+
+    fixOptions = (name, options, root, source) ->
+        # remove original value
+        delete config.input[name]
+        if Object.isString options
+            options =
+                name: name
+                main: 'index.js'
+                directory: np.normalize options
+        else if options is true
+            [name,main] = resolve root, name, source
+            options =
+                name: name
+                main: np.basename main
+                directory: np.dirname main
+        # set new value
+        config.input[name] = options
+
     for key, value of config.input
-        config[key] = np.normalize value
+        fixOptions key, value, '.', 'config'
+
     return
-
-getDependencies = (file, id, deps = {}) ->
-    getRelativeFileAndIds = (name) ->
-        dependent = np.normalize np.join(np.dirname(file), name) + ".js"
-        dependentId = np.join(id, name).replace(/\\/g, '\/')
-        recurseId = dependentId
-        if not fs.existsSync dependent
-            dependent = np.normalize np.join(np.dirname(file), name) + "/index.js"
-            dependentId = np.join(id, name).replace(/\\/g, '\/') + "/index"
-        [dependent, dependentId, recurseId]
-
-    content = utility.read file
-    names = utility.getMatches content, /\brequire\s*\(\s*(['"][^'"]+['"])\s*\)/g, 1
-    names = names.map (x) -> eval(x)
-    for name in names when name[0] is '.'
-        [dependentFile, fileId, recurseId] = getRelativeFileAndIds name
-        if not fs.existsSync dependentFile
-            console.warn "file not found #{dependentFile} referenced from #{file}"
-            continue
-        if not deps[dependentFile]
-            deps[dependentFile] = fileId
-            # recurse
-            getDependencies dependentFile, recurseId, deps
-    deps
-
-buildStatic = (config, moduleId) ->
-    main =
-        try
-            require.resolve moduleId
-        catch e
-            null
-    throw new Error "Module not found: #{moduleId}" unless main?
-    deps = {}
-    deps[main] = moduleId + "/index"
-    deps = getDependencies main, moduleId, deps
-    for file, id of deps
-        buildFile config, file, id
 
 buildCommon = (config) ->
     check config
     copyRequire config
-    for name, input of config.input when input is true
-        buildStatic config, name
 
+getModuleId = (inputConfig, file) ->
+    relative = np.relative inputConfig.directory, file
+    if relative is inputConfig.main
+        relative = "index.js"
+    # remove extension
+    relative = relative.slice 0, -".js".length
+    normalize np.join inputConfig.name, relative
+
+exclude = (file) ->
+    if /WEB-INF/.test file
+        return true
+    return false
 exports.build = (config, callback) ->
     buildCommon config
-    for name, input of config.input when Object.isString input
-        list = utility.list input, {include: ".js"}
-        for file in list
-            buildFile config, file
+    for name, input of config.input
+        list = utility.list input.directory, {include: ".js"}
+        for file in list when not exclude file
+            id = getModuleId input, file
+            buildFile config, file, id
     buildIncludes config
     callback?()
 
+watchInput = (config, input) ->
+    watcher.watchDirectory input.directory, {include: ".js", initial:false},
+        (file, curr, prev, change) ->
+            if exclude file
+                return
+            id = getModuleId input, file
+            buildFile config, file, id
+            if change is "deleted" or change is "created"
+                buildIncludes config
+            else
+                # touch the manifest file so others can fs.watch it
+                utility.touch getDebugManifestFile config
+
 exports.watch = (config) ->
-    buildCommon config
-    buildIncludes config
-    for name, input of config.input when Object.isString input
-        watcher.watchDirectory input, {include: ".js",initial:false},
-            (file, curr, prev, change) ->
-                buildFile config, file
-                if change is "deleted" or change is "created"
-                    buildIncludes config
+    exports.build config
+    for name, input of config.input
+        watchInput config, input
 
 # re-export utility and watcher
 exports.utility = utility
