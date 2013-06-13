@@ -1,8 +1,8 @@
 node_modules/*
 npm-debug.log
 lib/*
-war/js/*
-war/WEB-INF/js/*
-war/WEB-INF/classes/*
-war/WEB-INF/lib/*
-war/WEB-INF/pages/*
+www/js/*
+www/WEB-INF/js/*
+www/WEB-INF/classes/*
+www/WEB-INF/lib/*
+www/WEB-INF/pages/*
