@@ -4,11 +4,15 @@ np = require 'path'
 cp = require 'child_process'
 
 isWindows = process.platform is 'win32'
-cmd = if isWindows then ".cmd" else ""
+fixCommand = (command) ->
+    if not isWindows
+        command = command.replace /\.cmd\b/, ""
+    command
 
 module.exports = exports =
     spawn: spawn = (command, options, callback) ->
         return callback?() unless command?
+        command = fixCommand command
         if typeof options is 'function'
             callback = options
             options = null
@@ -21,6 +25,7 @@ module.exports = exports =
         return child
     exec: exec = (command, options, callback) ->
         return callback?() unless command?
+        command = fixCommand command
         if typeof options is 'function'
             callback = options
             options = null
@@ -38,9 +43,9 @@ module.exports = exports =
                 copy from, to
                 console.log "Copied #{to}"
     buildCoffee: buildCoffee = (input, output, callback) ->
-        spawn "coffee#{cmd} -c -m -o #{output} #{input}", callback
+        spawn "coffee.cmd -c -m -o #{output} #{input}", callback
     watchCoffee: watchCoffee = (input, output) ->
-        spawn "coffee#{cmd} -w -m -c -o #{output} #{input}"
+        spawn "coffee.cmd -w -m -c -o #{output} #{input}"
     isMatch: isMatch = (value, match, defaultValue=false) ->
         value = value.split(/[\/\\]/g).pop()
         return defaultValue unless match?

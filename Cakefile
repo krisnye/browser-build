@@ -13,9 +13,7 @@ browserBuilder = require "./#{source}"
 utility = require "./#{source}/utility"
 
 task 'build', build = (callback) ->
-    console.log 'alpha'
     utility.buildCoffee source, node, ->
-        console.log 'beta'
         browserBuilder.build config, callback
 task 'watch', ->
     utility.watchCoffee source, node
