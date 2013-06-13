@@ -10,5 +10,8 @@ catch (e){
     //  testing ourself
     glassTestModuleId = 'lib/index.js';
 }
+
+isWindows = process.platform is 'win32'
+ext = if isWindows ".cmd" else ""
 args = args.map(function(x){return np.normalize('./') + np.relative(np.dirname(glassTestModuleId), x);});
-cp.spawn("node.cmd", [glassTestModuleId].concat(args), {stdio:'inherit'});
+cp.spawn("node#{ext}", [glassTestModuleId].concat(args), {stdio:'inherit'});
