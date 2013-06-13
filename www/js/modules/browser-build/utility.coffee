@@ -5,6 +5,7 @@ cp = require 'child_process'
 
 module.exports = exports =
     spawn: spawn = (command, options, callback) ->
+        originalCommand = command
         return callback?() unless command?
         if typeof options is 'function'
             callback = options
@@ -13,20 +14,29 @@ module.exports = exports =
         options.stdio ?= 'inherit'
         args = command.split /\s+/
         command = args.shift()
-        child = cp.spawn command, args, options
-        child.on 'exit', callback if callback?
+        try
+            child = cp.spawn command, args, options
+            child.on 'exit', callback if callback?
+        catch e
+            console.log originalCommand
+            throw e
         return child
     exec: exec = (command, options, callback) ->
+        originalCommand = command
         return callback?() unless command?
         if typeof options is 'function'
             callback = options
             options = null
         options ?= {}
-        cp.exec command, options, (err, stdout, stderr) ->
-            console.log err if err?
-            console.log stdout.toString() if stdout?
-            console.log stderr.toString() if stderr?
-            callback?()
+        try
+            cp.exec command, options, (err, stdout, stderr) ->
+                console.log err if err?
+                console.log stdout.toString() if stdout?
+                console.log stderr.toString() if stderr?
+                callback?()
+        catch e
+            console.log originalCommand
+            throw e
     copyMetadata: copyMetadata = (input, output) ->
         for file in ["package.json", "README.md"]
             from = np.join input, file

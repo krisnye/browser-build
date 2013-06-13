@@ -12,7 +12,8 @@
 
   module.exports = exports = {
     spawn: spawn = function(command, options, callback) {
-      var args, child;
+      var args, child, e, originalCommand;
+      originalCommand = command;
       if (command == null) {
         return typeof callback === "function" ? callback() : void 0;
       }
@@ -28,13 +29,21 @@
       }
       args = command.split(/\s+/);
       command = args.shift();
-      child = cp.spawn(command, args, options);
-      if (callback != null) {
-        child.on('exit', callback);
+      try {
+        child = cp.spawn(command, args, options);
+        if (callback != null) {
+          child.on('exit', callback);
+        }
+      } catch (_error) {
+        e = _error;
+        console.log(originalCommand);
+        throw e;
       }
       return child;
     },
     exec: exec = function(command, options, callback) {
+      var e, originalCommand;
+      originalCommand = command;
       if (command == null) {
         return typeof callback === "function" ? callback() : void 0;
       }
@@ -45,18 +54,24 @@
       if (options == null) {
         options = {};
       }
-      return cp.exec(command, options, function(err, stdout, stderr) {
-        if (err != null) {
-          console.log(err);
-        }
-        if (stdout != null) {
-          console.log(stdout.toString());
-        }
-        if (stderr != null) {
-          console.log(stderr.toString());
-        }
-        return typeof callback === "function" ? callback() : void 0;
-      });
+      try {
+        return cp.exec(command, options, function(err, stdout, stderr) {
+          if (err != null) {
+            console.log(err);
+          }
+          if (stdout != null) {
+            console.log(stdout.toString());
+          }
+          if (stderr != null) {
+            console.log(stderr.toString());
+          }
+          return typeof callback === "function" ? callback() : void 0;
+        });
+      } catch (_error) {
+        e = _error;
+        console.log(originalCommand);
+        throw e;
+      }
     },
     copyMetadata: copyMetadata = function(input, output) {
       var file, from, to, _i, _len, _ref, _results;

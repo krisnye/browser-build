@@ -50,9 +50,10 @@
         modules[path] = fn
 
     require.loadAll = ->
-        id = undefined
         for id of modules
             require id
+
+    require.getModuleIds = -> Object.keys modules
 
     if typeof module is "undefined"
         @require = require

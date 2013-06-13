@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <title>Test</title>
+        <style>
+        .group
+        {
+            padding: 4px;
+            margin: 4px;
+            border: solid 1px black;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .header
+        {
+            font-weight: bold;
+        }
+        .error
+        {
+            color: red;
+        }
+        .warning
+        {
+            color: blue;
+        }
+        </style>
+    </head>
+    <body>
+        <div id="mocha"></div>
+        <script src="../debug.js"></script>
+        <script>
+        var glassTester = require("glass-test");
+        var moduleIds = require.getModuleIds();
+        var tests = 0;
+        var pass = 0;
+        function createElement(html) {
+            console.log("createElement", html);
+            var element = document.createElement('div');
+            element.innerHTML = html;
+            return element.firstChild;
+        }
+        function getContainer(prefix) {
+            var container;
+            try {
+                container = document.getElementById(prefix);
+            } catch (e) {
+                container = null;
+            }
+            if (container == null) {
+                container = createElement(
+                    "<div id='" + prefix + "' class='group'><div class='header'>" + prefix +"</div></div>");
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+        function addResult(name, error, result) {
+            var prefix = name.split(' ')[0];
+            var remaining = name.substring(prefix.length);
+            var container = getContainer(prefix);
+            console.log(name, prefix, error);
+            var resultClass = error ? "error" : "warning"
+            var element = createElement(
+                "<div class='row'><span class='name'>" + remaining +"</span>: <span class='" + resultClass + "'>" + (error || result || "").toString() + "</span></div>");
+            if (element)
+                container.appendChild(element);
+        }
+        function callback(name, error, result) {
+            if (name != null) {
+                tests++
+                if (error == null)
+                    pass++
+                addResult(name, error, result);
+            } else {
+                var fail = tests - pass;
+                if (fail)
+                    document.title = fail + "/" + tests + " Failed"
+                else
+                    document.title = pass + "/" + tests + " Passed"
+            }
+        }
+        glassTester.runTests(moduleIds, callback);
+        </script>
+    </body>
+</html>
