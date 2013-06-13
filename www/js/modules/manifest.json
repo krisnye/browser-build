@@ -1,0 +1,8 @@
+[
+  "require.js",
+  "browser-build/index.js",
+  "browser-build/require.js",
+  "browser-build/utility.js",
+  "browser-build/watcher.js",
+  "sugar/index.js"
+]

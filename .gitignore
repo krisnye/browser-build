@@ -1,2 +1,8 @@
+node_modules/*
 npm-debug.log
-node_modules
+lib/*
+war/js/*
+war/WEB-INF/js/*
+war/WEB-INF/classes/*
+war/WEB-INF/lib/*
+war/WEB-INF/pages/*
