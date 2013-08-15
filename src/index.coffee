@@ -97,6 +97,8 @@ buildFile = (config, file, id) ->
         return
     input = utility.read file
     output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
+    # lets also name our anonymous functions
+    output = output.replace /\b([a-zA-Z_$0-9]+)\s*([=:])\s*function\b\s*\(/g, "$1 $2 function _$1("
     utility.write outputFile, output
     log config, "Wrapped #{outputFile}"
     copySourceMap config, file, outputFile
@@ -179,23 +181,24 @@ check = (config) ->
         throw new Error "module not found: " + module + ", source: " + source
 
     fixOptions = (name, options, root, source) ->
-        # remove original value
-        delete config.input[name]
+        # never mess with exclude options
+        if excludeModule config, name
+            return
         if Object.isString options
-            options =
+            config.input[name] =
                 name: name
                 main: 'index.js'
                 directory: np.normalize options
-        else if options is true
+        else if options is true or not options?
+            # remove original value, because name may change
+            delete config.input[name]
             [name,main] = resolve root, name, source
-            options =
+            config.input[name] =
                 name: name
                 main: np.basename main
                 directory: np.dirname main
-        # set new value
-        config.input[name] = options
 
-    for key, value of config.input
+    for key, value of config.input when value
         fixOptions key, value, '.', 'config'
 
     return
@@ -212,26 +215,34 @@ getModuleId = (inputConfig, file) ->
     relative = relative.slice 0, -".js".length
     normalize np.join inputConfig.name, relative
 
-exclude = (file) ->
+excludeFile = (file) ->
     if /WEB-INF/.test file
         return true
     return false
+excludeModule = (config, moduleId) ->
+    if moduleId.endsWith '/index'
+        moduleId = moduleId.substring(0, moduleId.length - '/index'.length)
+    value = config.input[moduleId]
+    return value is false
 exports.build = (config, callback) ->
     buildCommon config
-    for name, input of config.input
+    for name, input of config.input when input isnt false
         list = utility.list input.directory, {include: ".js"}
-        for file in list when not exclude file
+        for file in list when not excludeFile file
             id = getModuleId input, file
-            buildFile config, file, id
+            if not excludeModule config, id
+                buildFile config, file, id
     buildIncludes config
     callback?()
 
 watchInput = (config, input) ->
     watcher.watchDirectory input.directory, {include: ".js", initial:false},
         (file, curr, prev, change) ->
-            if exclude file
+            if excludeFile file
                 return
             id = getModuleId input, file
+            if excludeModule config, id
+                return
             buildFile config, file, id
             if change is "deleted" or change is "created"
                 buildIncludes config
@@ -241,7 +252,7 @@ watchInput = (config, input) ->
 
 exports.watch = (config) ->
     exports.build config
-    for name, input of config.input
+    for name, input of config.input when not excludeModule config, name
         watchInput config, input
 
 # re-export utility and watcher

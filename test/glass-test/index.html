@@ -27,13 +27,13 @@
     <body>
         <div id="mocha"></div>
         <script src="../debug.js"></script>
+        <script src="/_ah/channel/jsapi"></script> 
         <script>
         var glassTester = require("glass-test");
         var moduleIds = require.getModuleIds();
         var tests = 0;
         var pass = 0;
         function createElement(html) {
-            console.log("createElement", html);
             var element = document.createElement('div');
             element.innerHTML = html;
             return element.firstChild;
@@ -56,7 +56,6 @@
             var prefix = name.split(' ')[0];
             var remaining = name.substring(prefix.length);
             var container = getContainer(prefix);
-            console.log(name, prefix, error);
             var resultClass = error ? "error" : "warning"
             var element = createElement(
                 "<div class='row'><span class='name'>" + remaining +"</span>: <span class='" + resultClass + "'>" + (error || result || "").toString() + "</span></div>");
@@ -71,10 +70,13 @@
                 addResult(name, error, result);
             } else {
                 var fail = tests - pass;
-                if (fail)
+                if (fail) {
                     document.title = fail + "/" + tests + " Failed"
-                else
+                    new Audio("http://rpg.hamsterrepublic.com/wiki-images/5/58/Death.ogg").play()
+                }
+                else {
                     document.title = pass + "/" + tests + " Passed"
+                }
             }
         }
         glassTester.runTests(moduleIds, callback);

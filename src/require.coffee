@@ -7,7 +7,9 @@
         originalPath = path
         m = modules[path]
         unless m
-            path += "/index"
+            if path[path.length-1] isnt '/'
+                path += '/'
+            path += "index"
             m = modules[path]
         unless m
             steps = path.replace(/\/index$/, "").split(/\//)
@@ -21,7 +23,7 @@
         throw new Error("Couldn't find module for: " + path)  unless m
         unless m.exports
             m.exports = {}
-            m.filename = path
+            m.id = path
             m.call this, m, m.exports, resolve(path)
         m.exports
 

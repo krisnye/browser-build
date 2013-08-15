@@ -53,9 +53,9 @@ module.exports = exports =
                 copy from, to
                 console.log "Copied #{to}"
     buildCoffee: buildCoffee = (input, output, callback) ->
-        spawn "coffee.cmd -c -m -o #{output} #{input}", callback
+        spawn "coffee.cmd -c -o #{output} #{input}", callback
     watchCoffee: watchCoffee = (input, output) ->
-        spawn "coffee.cmd -w -m -c -o #{output} #{input}"
+        spawn "coffee.cmd -w -c -o #{output} #{input}"
     isMatch: isMatch = (value, match, defaultValue=false) ->
         value = value.split(/[\/\\]/g).pop()
         return defaultValue unless match?

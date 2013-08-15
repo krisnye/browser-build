@@ -1,6 +1,5 @@
 node_modules/*
 npm-debug.log
-lib/*
 www/js/*
 www/WEB-INF/js/*
 www/WEB-INF/classes/*
