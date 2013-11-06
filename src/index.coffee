@@ -149,7 +149,6 @@ copyRequire = (config) ->
         source = np.join __dirname, '../lib/require.js'
     target = np.join getOutputModuleDirectory(config), 'require.js'
     utility.copy source, target
-    log config, "Copied #{target}"
 
 check = (config) ->
     config.input ?= {"": true}

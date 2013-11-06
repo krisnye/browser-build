@@ -51,7 +51,6 @@ module.exports = exports =
             to = np.join output, file
             if fs.existsSync from
                 copy from, to
-                console.log "Copied #{to}"
     buildCoffee: buildCoffee = (input, output, callback) ->
         spawn "coffee.cmd -c -o #{output} #{input}", callback
     watchCoffee: watchCoffee = (input, output) ->
@@ -96,14 +95,22 @@ module.exports = exports =
         makeParentDirectories file
         fs.writeFileSync(file, content, 'utf8')
     # copies files or folders
-    copy: copy = (source, target) ->
-        if isFile source
-            content = read source
-            write target, content
+    copy: copy = (source, target, include) ->
+        target = np.normalize target
+        if isFile(source)
+            if isMatch(source, include, true)
+                content = read source
+                write target, content
+                console.log "Copied #{np.normalize target}"
         else if isDirectory source
             files = fs.readdirSync source
             for file in files
-                copy np.join(source, file), np.join(target, file)
+                copy np.join(source, file), np.join(target, file), include
+    watchCopy: (input, output, include) ->
+        watcher = require './watcher'
+        watcher.watchDirectory input, {include:include}, (inputFile) ->
+            outputFile = np.join(output, np.relative(input, inputFile))
+            copy inputFile, outputFile
     getMatches: (s, regex, group) ->
         if not regex.global
             throw 'regex must be declared with global modifier /trailing/g'
