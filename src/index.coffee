@@ -96,7 +96,11 @@ buildFile = (config, file, id) ->
         deleteFile outputFile
         return
     input = utility.read file
-    output = "(function(){require.register('#{id}',function(module,exports,require){#{input}\n})})()"
+    output = "(function(process, global){
+                require.register('#{id}',function(module,exports,require){
+                    #{input}\
+                })
+             }({browser: true},self))"
     # lets also name our anonymous functions
     output = output.replace /\b([a-zA-Z_$0-9]+)\s*([=:])\s*function\b\s*\(/g, "$1 $2 function _$1("
     utility.write outputFile, output
