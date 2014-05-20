@@ -100,7 +100,7 @@ buildFile = (config, file, id) ->
                 require.register('#{id}',function(module,exports,require){
                     #{input}\
                 })
-             }({browser: typeof window !== 'undefined'},
+             }(typeof process !== 'undefined' ? process : {browser: typeof window !== 'undefined'},
                 typeof self !== 'undefined' ? self :
                   typeof window !== 'undefined' ? window :
                   typeof global !== 'undefined' ? global : {}))"
