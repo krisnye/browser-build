@@ -101,7 +101,9 @@ buildFile = (config, file, id) ->
                     #{input}\
                 })
              }({browser: typeof window !== 'undefined'},
-                typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {}))"
+                typeof self !== 'undefined' ? self :
+                  typeof window !== 'undefined' ? window :
+                  typeof global !== 'undefined' ? global : {}))"
     # lets also name our anonymous functions
     output = output.replace /\b([a-zA-Z_$0-9]+)\s*([=:])\s*function\b\s*\(/g, "$1 $2 function _$1("
     utility.write outputFile, output
